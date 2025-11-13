@@ -60,3 +60,7 @@
 - [ ] Translate API documentation
 - [ ] Translate error messages
 - [x] Update landing page content to Russian
+
+
+## Bug Fixes
+- [x] Fix __dirname is not defined error in camoufoxExecutor.ts
