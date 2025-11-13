@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, sessions, InsertSession, tasks, InsertTask, apiKeys, InsertApiKey } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,106 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Session management
+export async function createSession(data: InsertSession) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(sessions).values(data);
+  return result;
+}
+
+export async function getUserSessions(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(sessions).where(eq(sessions.userId, userId)).orderBy(sessions.createdAt);
+}
+
+export async function getSessionById(sessionId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(sessions).where(eq(sessions.id, sessionId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateSessionStatus(sessionId: number, status: "active" | "stopped" | "error") {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.update(sessions).set({ status, updatedAt: new Date() }).where(eq(sessions.id, sessionId));
+}
+
+export async function deleteSession(sessionId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(sessions).where(eq(sessions.id, sessionId));
+}
+
+// Task management
+export async function createTask(data: InsertTask) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(tasks).values(data);
+  return result;
+}
+
+export async function getSessionTasks(sessionId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(tasks).where(eq(tasks.sessionId, sessionId)).orderBy(tasks.createdAt);
+}
+
+export async function getTaskById(taskId: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(tasks).where(eq(tasks.id, taskId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateTaskStatus(
+  taskId: number,
+  status: "pending" | "running" | "completed" | "failed",
+  result?: string,
+  error?: string
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const updates: any = { status };
+  if (result !== undefined) updates.result = result;
+  if (error !== undefined) updates.error = error;
+  if (status === "completed" || status === "failed") {
+    updates.completedAt = new Date();
+  }
+  await db.update(tasks).set(updates).where(eq(tasks.id, taskId));
+}
+
+// API key management
+export async function createApiKey(data: InsertApiKey) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db.insert(apiKeys).values(data);
+  return result;
+}
+
+export async function getUserApiKeys(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return await db.select().from(apiKeys).where(eq(apiKeys.userId, userId)).orderBy(apiKeys.createdAt);
+}
+
+export async function getApiKeyByKey(key: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(apiKeys).where(eq(apiKeys.key, key)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function updateApiKeyLastUsed(keyId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(apiKeys).set({ lastUsedAt: new Date() }).where(eq(apiKeys.id, keyId));
+}
+
+export async function deleteApiKey(keyId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(apiKeys).where(eq(apiKeys.id, keyId));
+}
