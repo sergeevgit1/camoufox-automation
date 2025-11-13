@@ -192,3 +192,48 @@ export async function deleteApiKey(keyId: number) {
   if (!db) throw new Error("Database not available");
   await db.delete(apiKeys).where(eq(apiKeys.id, keyId));
 }
+
+// Profile management for multi-accounting
+export async function getUserProfiles(userId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  const { profiles } = await import('../drizzle/schema');
+  return await db.select().from(profiles).where(eq(profiles.userId, userId)).orderBy(profiles.createdAt);
+}
+
+export async function getProfileById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const { profiles } = await import('../drizzle/schema');
+  const result = await db.select().from(profiles).where(eq(profiles.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function createProfile(data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const { profiles } = await import('../drizzle/schema');
+  const result = await db.insert(profiles).values(data);
+  return result;
+}
+
+export async function updateProfile(id: number, data: any) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const { profiles } = await import('../drizzle/schema');
+  await db.update(profiles).set({ ...data, updatedAt: new Date() }).where(eq(profiles.id, id));
+}
+
+export async function deleteProfile(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const { profiles } = await import('../drizzle/schema');
+  await db.delete(profiles).where(eq(profiles.id, id));
+}
+
+export async function updateProfileLastUsed(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  const { profiles } = await import('../drizzle/schema');
+  await db.update(profiles).set({ lastUsedAt: new Date() }).where(eq(profiles.id, id));
+}

@@ -15,6 +15,13 @@
       "when": 1763069147576,
       "tag": "0001_loud_penance",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1763070112297,
+      "tag": "0002_noisy_vindicator",
+      "breakpoints": true
     }
   ]
 }

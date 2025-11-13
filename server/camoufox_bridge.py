@@ -93,6 +93,203 @@ async def execute_task(task_data):
                 result['result'] = eval_result
                 result['url'] = page.url
                 
+            elif action == 'get_cookies':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                cookies = await page.context.cookies()
+                result['cookies'] = cookies
+                
+            elif action == 'set_cookies':
+                cookies = params.get('cookies', [])
+                await page.context.add_cookies(cookies)
+                result['success'] = True
+                
+            elif action == 'delete_cookies':
+                cookie_name = params.get('cookie_name')
+                if cookie_name:
+                    await page.context.clear_cookies(name=cookie_name)
+                result['success'] = True
+                
+            elif action == 'clear_cookies':
+                await page.context.clear_cookies()
+                result['success'] = True
+                
+            elif action == 'get_storage':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                storage_type = params.get('storage_type', 'localStorage')
+                storage_key = params.get('storage_key')
+                
+                if storage_key:
+                    value = await page.evaluate(f"{storage_type}.getItem('{storage_key}')")
+                    result['value'] = value
+                else:
+                    all_items = await page.evaluate(f"Object.keys({storage_type}).reduce((obj, key) => {{ obj[key] = {storage_type}.getItem(key); return obj; }}, {{}})")
+                    result['items'] = all_items
+                    
+            elif action == 'set_storage':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                storage_type = params.get('storage_type', 'localStorage')
+                storage_key = params.get('storage_key')
+                storage_value = params.get('storage_value')
+                
+                if not storage_key:
+                    raise ValueError("storage_key is required")
+                    
+                await page.evaluate(f"{storage_type}.setItem('{storage_key}', '{storage_value}')")
+                result['success'] = True
+                
+            elif action == 'delete_storage':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                storage_type = params.get('storage_type', 'localStorage')
+                storage_key = params.get('storage_key')
+                
+                if storage_key:
+                    await page.evaluate(f"{storage_type}.removeItem('{storage_key}')")
+                result['success'] = True
+                
+            elif action == 'clear_storage':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                storage_type = params.get('storage_type', 'localStorage')
+                await page.evaluate(f"{storage_type}.clear()")
+                result['success'] = True
+                
+            elif action == 'set_geolocation':
+                latitude = params.get('latitude')
+                longitude = params.get('longitude')
+                accuracy = params.get('accuracy', 0)
+                
+                if latitude is None or longitude is None:
+                    raise ValueError("latitude and longitude are required")
+                    
+                await page.context.set_geolocation({
+                    'latitude': latitude,
+                    'longitude': longitude,
+                    'accuracy': accuracy
+                })
+                result['success'] = True
+                
+            elif action == 'generate_pdf':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                pdf_path = params.get('path', '/tmp/output.pdf')
+                pdf_options = params.get('pdf_options', {})
+                await page.pdf(path=pdf_path, **pdf_options)
+                result['pdf_path'] = pdf_path
+                
+            elif action == 'wait_for_selector':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                selector = params.get('selector')
+                if not selector:
+                    raise ValueError("selector is required")
+                    
+                timeout = params.get('timeout', 30000)
+                await page.wait_for_selector(selector, timeout=timeout)
+                result['success'] = True
+                
+            elif action == 'wait_for_timeout':
+                timeout = params.get('timeout', 1000)
+                await page.wait_for_timeout(timeout)
+                result['success'] = True
+                
+            elif action == 'press_key':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                key = params.get('key')
+                if not key:
+                    raise ValueError("key is required")
+                    
+                await page.keyboard.press(key)
+                result['success'] = True
+                
+            elif action == 'type_text':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                value = params.get('value')
+                if not value:
+                    raise ValueError("value is required")
+                    
+                await page.keyboard.type(value)
+                result['success'] = True
+                
+            elif action == 'mouse_click':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                x = params.get('x')
+                y = params.get('y')
+                button = params.get('button', 'left')
+                
+                if x is None or y is None:
+                    raise ValueError("x and y coordinates are required")
+                    
+                await page.mouse.click(x, y, button=button)
+                result['success'] = True
+                
+            elif action == 'mouse_move':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                x = params.get('x')
+                y = params.get('y')
+                
+                if x is None or y is None:
+                    raise ValueError("x and y coordinates are required")
+                    
+                await page.mouse.move(x, y)
+                result['success'] = True
+                
+            elif action == 'drag_and_drop':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                source = params.get('source_selector')
+                target = params.get('target_selector')
+                
+                if not source or not target:
+                    raise ValueError("source_selector and target_selector are required")
+                    
+                await page.drag_and_drop(source, target)
+                result['success'] = True
+                
+            elif action == 'upload_file':
+                url = params.get('url')
+                if url:
+                    await page.goto(url, wait_until=params.get('wait_until', 'load'))
+                    
+                selector = params.get('selector')
+                file_path = params.get('file_path')
+                
+                if not selector or not file_path:
+                    raise ValueError("selector and file_path are required")
+                    
+                await page.set_input_files(selector, file_path)
+                result['success'] = True
+                
             else:
                 raise ValueError(f"Unknown action: {action}")
             

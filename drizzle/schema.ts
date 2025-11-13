@@ -29,6 +29,7 @@ export type InsertUser = typeof users.$inferInsert;
 export const sessions = mysqlTable("sessions", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  profileId: int("profileId").references(() => profiles.id, { onDelete: "set null" }),
   name: varchar("name", { length: 255 }).notNull(),
   status: mysqlEnum("status", ["active", "stopped", "error"]).default("stopped").notNull(),
   browserConfig: text("browserConfig"), // JSON string for Camoufox config
@@ -68,3 +69,28 @@ export const apiKeys = mysqlTable("apiKeys", {
 
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type InsertApiKey = typeof apiKeys.$inferInsert;
+
+// Browser profiles for multi-accounting (like Dolphin/GoLogin)
+export const profiles = mysqlTable("profiles", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  tags: text("tags"), // Comma-separated tags for grouping
+  fingerprint: text("fingerprint"), // JSON string for browser fingerprint config
+  cookies: text("cookies"), // JSON string for stored cookies
+  localStorage: text("localStorage"), // JSON string for localStorage data
+  sessionStorage: text("sessionStorage"), // JSON string for sessionStorage data
+  proxy: text("proxy"), // JSON string for proxy config
+  userAgent: text("userAgent"),
+  viewport: varchar("viewport", { length: 50 }), // e.g., "1920x1080"
+  timezone: varchar("timezone", { length: 100 }),
+  locale: varchar("locale", { length: 20 }),
+  geolocation: varchar("geolocation", { length: 100 }), // e.g., "55.7558,37.6173" (lat,lon)
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  lastUsedAt: timestamp("lastUsedAt"),
+});
+
+export type Profile = typeof profiles.$inferSelect;
+export type InsertProfile = typeof profiles.$inferInsert;

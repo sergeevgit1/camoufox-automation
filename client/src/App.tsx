@@ -10,6 +10,7 @@ import Sessions from "./pages/Sessions";
 import ApiKeys from "./pages/ApiKeys";
 import SessionDetail from "./pages/SessionDetail";
 import Docs from "./pages/Docs";
+import Profiles from "./pages/Profiles";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -19,6 +20,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/sessions" component={Sessions} />
       <Route path="/sessions/:id" component={SessionDetail} />
+      <Route path="/profiles" component={Profiles} />
       <Route path="/api-keys" component={ApiKeys} />
       <Route path="/docs" component={Docs} />
       <Route path={"/404"} component={NotFound} />

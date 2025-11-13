@@ -19,9 +19,11 @@ export default function Sessions() {
   const [humanize, setHumanize] = useState(false);
   const [os, setOs] = useState<"windows" | "macos" | "linux">("linux");
   const [blockImages, setBlockImages] = useState(false);
+  const [profileId, setProfileId] = useState<number | undefined>(undefined);
 
   const utils = trpc.useUtils();
   const { data: sessions, isLoading } = trpc.sessions.list.useQuery();
+  const { data: profiles } = trpc.profiles.list.useQuery();
   
   const createMutation = trpc.sessions.create.useMutation({
     onSuccess: () => {
@@ -33,6 +35,7 @@ export default function Sessions() {
       setHumanize(false);
       setOs("linux");
       setBlockImages(false);
+      setProfileId(undefined);
     },
     onError: (error) => {
       toast.error(`Failed to create session: ${error.message}`);
@@ -57,6 +60,7 @@ export default function Sessions() {
 
     createMutation.mutate({
       name,
+      profileId,
       browserConfig: {
         headless,
         humanize,
@@ -106,6 +110,26 @@ export default function Sessions() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                   />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="profile">Browser Profile (Optional)</Label>
+                  <Select value={profileId?.toString() || "none"} onValueChange={(v) => setProfileId(v === "none" ? undefined : Number(v))}>
+                    <SelectTrigger id="profile">
+                      <SelectValue placeholder="No profile" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">No profile</SelectItem>
+                      {profiles?.map((profile) => (
+                        <SelectItem key={profile.id} value={profile.id.toString()}>
+                          {profile.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Select a profile to use its fingerprint and settings
+                  </p>
                 </div>
 
                 <div className="space-y-2">

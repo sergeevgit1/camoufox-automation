@@ -5,6 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import { executeCamoufoxTask } from "./camoufoxExecutor";
 import { updateTaskStatus } from "./db";
+import type { InsertSession } from "../drizzle/schema";
 
 // Async task executor
 async function executeTaskAsync(
@@ -65,24 +66,31 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({
         name: z.string().min(1),
+        profileId: z.number().optional(),
         browserConfig: z.object({
           headless: z.boolean().optional(),
-          humanize: z.union([z.boolean(), z.number()]).optional(),
-          os: z.enum(['windows', 'macos', 'linux']).optional(),
-          geoip: z.union([z.string(), z.boolean()]).optional(),
-          locale: z.string().optional(),
+          humanize: z.boolean().optional(),
+          os: z.enum(["windows", "macos", "linux"]).optional(),
           block_images: z.boolean().optional(),
         }).optional(),
       }))
       .mutation(async ({ ctx, input }) => {
-        const { createSession } = await import('./db');
-        await createSession({
+        const { createSession, updateProfileLastUsed } = await import('./db');
+        const sessionData: InsertSession = {
           userId: ctx.user.id,
           name: input.name,
+          profileId: input.profileId || null,
+          status: "stopped",
           browserConfig: input.browserConfig ? JSON.stringify(input.browserConfig) : null,
-          status: 'stopped',
-        });
-        return { success: true };
+        };
+        const result = await createSession(sessionData);
+        
+        // Update profile last used timestamp
+        if (input.profileId) {
+          await updateProfileLastUsed(input.profileId);
+        }
+        
+        return { success: true, id: Number((result as any).insertId) };
       }),
     
     delete: protectedProcedure
@@ -182,6 +190,132 @@ export const appRouter = router({
         const { deleteApiKey } = await import('./db');
         await deleteApiKey(input.id);
         return { success: true };
+      }),
+  }),
+
+  // Profile management for multi-accounting
+  profiles: router({
+    list: protectedProcedure.query(async ({ ctx }) => {
+      const { getUserProfiles } = await import('./db');
+      return await getUserProfiles(ctx.user.id);
+    }),
+
+    get: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ ctx, input }) => {
+        const { getProfileById } = await import('./db');
+        return await getProfileById(input.id);
+      }),
+
+    create: protectedProcedure
+      .input(z.object({
+        name: z.string().min(1),
+        tags: z.string().optional(),
+        fingerprint: z.record(z.string(), z.any()).optional(),
+        proxy: z.object({
+          server: z.string().optional(),
+          username: z.string().optional(),
+          password: z.string().optional(),
+        }).optional(),
+        userAgent: z.string().optional(),
+        viewport: z.string().optional(),
+        timezone: z.string().optional(),
+        locale: z.string().optional(),
+        geolocation: z.string().optional(),
+        notes: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { createProfile } = await import('./db');
+        const profileData: any = {
+          userId: ctx.user.id,
+          name: input.name,
+          tags: input.tags || null,
+          fingerprint: input.fingerprint ? JSON.stringify(input.fingerprint) : null,
+          proxy: input.proxy ? JSON.stringify(input.proxy) : null,
+          userAgent: input.userAgent || null,
+          viewport: input.viewport || null,
+          timezone: input.timezone || null,
+          locale: input.locale || null,
+          geolocation: input.geolocation || null,
+          notes: input.notes || null,
+        };
+        const result = await createProfile(profileData);
+        return { success: true, id: Number((result as any).insertId) };
+      }),
+
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().min(1).optional(),
+        tags: z.string().optional(),
+        fingerprint: z.record(z.string(), z.any()).optional(),
+        proxy: z.object({
+          server: z.string().optional(),
+          username: z.string().optional(),
+          password: z.string().optional(),
+        }).optional(),
+        userAgent: z.string().optional(),
+        viewport: z.string().optional(),
+        timezone: z.string().optional(),
+        locale: z.string().optional(),
+        geolocation: z.string().optional(),
+        notes: z.string().optional(),
+        cookies: z.string().optional(),
+        localStorage: z.string().optional(),
+        sessionStorage: z.string().optional(),
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { updateProfile } = await import('./db');
+        const { id, ...data } = input;
+        const updateData: any = {};
+        if (data.name) updateData.name = data.name;
+        if (data.tags !== undefined) updateData.tags = data.tags;
+        if (data.fingerprint) updateData.fingerprint = JSON.stringify(data.fingerprint);
+        if (data.proxy) updateData.proxy = JSON.stringify(data.proxy);
+        if (data.userAgent !== undefined) updateData.userAgent = data.userAgent;
+        if (data.viewport !== undefined) updateData.viewport = data.viewport;
+        if (data.timezone !== undefined) updateData.timezone = data.timezone;
+        if (data.locale !== undefined) updateData.locale = data.locale;
+        if (data.geolocation !== undefined) updateData.geolocation = data.geolocation;
+        if (data.notes !== undefined) updateData.notes = data.notes;
+        if (data.cookies !== undefined) updateData.cookies = data.cookies;
+        if (data.localStorage !== undefined) updateData.localStorage = data.localStorage;
+        if (data.sessionStorage !== undefined) updateData.sessionStorage = data.sessionStorage;
+        await updateProfile(id, updateData);
+        return { success: true };
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ ctx, input }) => {
+        const { deleteProfile } = await import('./db');
+        await deleteProfile(input.id);
+        return { success: true };
+      }),
+
+    clone: protectedProcedure
+      .input(z.object({ id: z.number(), name: z.string().min(1) }))
+      .mutation(async ({ ctx, input }) => {
+        const { getProfileById, createProfile } = await import('./db');
+        const original = await getProfileById(input.id);
+        if (!original) throw new Error('Profile not found');
+        
+        const clonedData: any = {
+          userId: ctx.user.id,
+          name: input.name,
+          tags: original.tags,
+          fingerprint: original.fingerprint,
+          proxy: original.proxy,
+          userAgent: original.userAgent,
+          viewport: original.viewport,
+          timezone: original.timezone,
+          locale: original.locale,
+          geolocation: original.geolocation,
+          notes: original.notes,
+          // Don't clone cookies, localStorage, sessionStorage
+        };
+        const result = await createProfile(clonedData);
+        return { success: true, id: Number((result as any).insertId) };
       }),
   }),
 });

@@ -21,16 +21,17 @@ import {
 } from "@/components/ui/sidebar";
 import { APP_LOGO, APP_TITLE, getLoginUrl } from "@/const";
 import { useIsMobile } from "@/hooks/useMobile";
-import { Globe, Key, LayoutDashboard, LogOut, PanelLeft } from "lucide-react";
+import { Fingerprint, Globe, Key, LayoutDashboard, LogOut, PanelLeft } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { DashboardLayoutSkeleton } from './DashboardLayoutSkeleton';
 import { Button } from "./ui/button";
 
 const menuItems = [
-  { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
-  { icon: Globe, label: "Sessions", path: "/sessions" },
-  { icon: Key, label: "API Keys", path: "/api-keys" },
+  { icon: LayoutDashboard, label: "Панель управления", path: "/dashboard" },
+  { icon: Fingerprint, label: "Профили", path: "/profiles" },
+  { icon: Globe, label: "Сессии", path: "/sessions" },
+  { icon: Key, label: "API ключи", path: "/api-keys" },
 ];
 
 const SIDEBAR_WIDTH_KEY = "sidebar-width";
