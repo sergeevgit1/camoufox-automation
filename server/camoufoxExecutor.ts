@@ -103,7 +103,7 @@ export async function executeCamoufoxTask(taskData: TaskData): Promise<TaskResul
     const taskJson = JSON.stringify(taskData);
     
     // Spawn Python process with the task data as argument
-    const pythonProcess = spawn('python3.11', [pythonScript, taskJson]);
+    const pythonProcess = spawn('python3', [pythonScript, taskJson]);
     
     let stdout = '';
     let stderr = '';

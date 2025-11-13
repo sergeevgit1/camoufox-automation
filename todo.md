@@ -64,3 +64,10 @@
 
 ## Bug Fixes
 - [x] Fix __dirname is not defined error in camoufoxExecutor.ts
+
+## New Tasks
+- [x] Fix Python 3.11 not found error (use python3 instead)
+- [x] Verify __dirname fix is applied correctly
+- [x] Redesign UI to clean block-based style (Notion/Manus)
+- [x] Remove gradients, blurs, and effects from design
+- [x] Update color scheme to flat, minimal palette
