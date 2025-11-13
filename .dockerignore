@@ -1,0 +1,60 @@
+# Зависимости
+node_modules
+npm-debug.log
+yarn-error.log
+pnpm-debug.log
+
+# Среда разработки
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Git
+.git
+.gitignore
+.gitkeep
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Тесты
+coverage
+.nyc_output
+*.test.ts
+*.spec.ts
+
+# Документация
+README.md
+ROADMAP.md
+ideas.md
+todo.md
+docs
+
+# Сборка
+dist
+build
+.cache
+
+# Логи
+logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+docker-compose.yml
+.dockerignore
+
+# Временные файлы
+tmp
+temp
+*.tmp

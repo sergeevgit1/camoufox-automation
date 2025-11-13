@@ -166,6 +166,9 @@ importers:
       openai:
         specifier: ^4.67.0
         version: 4.104.0(zod@4.1.12)
+      pocketbase:
+        specifier: ^0.26.3
+        version: 0.26.3
       react:
         specifier: ^19.1.1
         version: 19.2.0
@@ -3728,6 +3731,9 @@ packages:
     resolution: {integrity: sha512-6AT4ifHOzEDVctsITuw+SIFzn43sacD/ENLRvv+aTjCTg7ontbdQBZ1/TBSVNbbNDSyx7Trrc5I5pChKaPQM+g==}
     engines: {node: '>=18.12'}
     hasBin: true
+
+  pocketbase@0.26.3:
+    resolution: {integrity: sha512-5deUKRoEczpxxuHzwr6/DHVmgbggxylEVig8CKN+MjvtYxPUqX/C6puU0yaR2yhTi8zrh7J9s7Ty+qBGwVzWOQ==}
 
   points-on-curve@0.2.0:
     resolution: {integrity: sha512-0mYKnYYe9ZcqMCWhUjItv/oHjvgEsfKvnUTg8sAtnHr3GVy7rGkXCb6d5cSyqrWqL4k81b9CPg3urd+T7aop3A==}
@@ -8391,6 +8397,8 @@ snapshots:
       pathe: 2.0.3
 
   pnpm@10.18.0: {}
+
+  pocketbase@0.26.3: {}
 
   points-on-curve@0.2.0: {}
 
